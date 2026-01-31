@@ -2,6 +2,7 @@ from thumby import Sprite
 from thumby import display
 from thumby import buttonA, buttonB, buttonU, buttonD, buttonL, buttonR
 import random
+import time
 
 # BITMAP: width: 5, height: 5
 PLACED_BIT_MAP = bytearray([19, 6, 12, 25, 19])
@@ -96,12 +97,43 @@ class Game:
             x = self.position[0] + dx
             y = self.position[1] + dy
 
-            print(f"{x},{y}")
-
             self.board[y][x] = True
 
+        self.score_board()
         self.piece = self.get_random_piece()
         self.position = (3, 3)
+
+    def score_board(self):
+        row_scored = [True for _ in range(8)]
+        col_scored = [True for _ in range(8)]
+
+        for x in range(8):
+            for y in range(8):
+                # if they are true the entire row/col they are a full line
+                col_scored[x] = col_scored[x] and self.board[x][y]
+                row_scored[y] = row_scored[y] and self.board[x][y]
+
+        # count total lines scored for cleaner code
+        total_lines_scored = sum(row_scored) + sum(col_scored)
+
+        # exit early if no lines scored
+        if total_lines_scored == 0:
+            return
+
+        # calculate score
+        self.score += int(total_lines_scored * 500 * (1.2**total_lines_scored))
+
+        # clear the scored rows
+        for y, full in enumerate(row_scored):
+            if full:
+                for x in range(8):
+                    self.board[x][y] = False
+
+        # clear the scored columns
+        for x, full in enumerate(col_scored):
+            if full:
+                for y in range(8):
+                    self.board[x][y] = False
 
     @staticmethod
     def get_random_piece():
@@ -122,6 +154,7 @@ while 1:
     # handle input
     if buttonA.justPressed():
         game.place_piece()
+
     if buttonB.justPressed():
         game.rotate_piece(clock_wise=False)
 
@@ -139,3 +172,4 @@ while 1:
 
     # thumby.display.drawText("HELLO WORLD", 15, 15)
     display.update()
+
