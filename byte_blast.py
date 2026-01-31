@@ -1,5 +1,6 @@
 from thumby import Sprite
 from thumby import display
+from thumby import buttonA, buttonB
 import random
 
 
@@ -33,7 +34,7 @@ class Game:
         self.piece_sprite = Sprite(5, 5, PIECE_BIT_MAP)
 
         self.piece = self.get_random_piece()
-        self.position = (0, 0)
+        self.position = (3, 3)
 
     def draw_board(self):
         for row in range(8):
@@ -51,6 +52,26 @@ class Game:
             self.piece_sprite.y = (self.position[1] + dy) * 5
             display.drawSprite(self.piece_sprite)
 
+    def rotate_piece(self, clock_wise):
+        if clock_wise:
+            new_shape = [(-dy, dx) for dx, dy in self.piece]
+        else:
+            new_shape = [(dy, -dx) for dx, dy in self.piece]
+
+        if self.is_out_of_bounds(self.position[0], self.position[1], new_shape):
+            self.piece = new_shape
+
+    def is_out_of_bounds(self, col, row, shape):
+        # Check if the move results tin the piece being out of bound
+        for dx, dy in shape:
+            new_col = col + dx
+            new_row = row + dy
+            # Check grid boundaries
+            if new_col < 0 or new_col >= 8 or new_row < 0 or new_row >= 8:
+                return False
+
+        return True
+
     @staticmethod
     def get_random_piece():
         key = random.choice(SHAPE_KEYS)
@@ -67,6 +88,11 @@ while 1:
     game.draw_board()
     game.draw_piece()
 
+    # handle input
+    if buttonA.justPressed():
+        game.rotate_piece(clock_wise=True)
+    if buttonB.justPressed():
+        game.rotate_piece(clock_wise=False)
+
     # thumby.display.drawText("HELLO WORLD", 15, 15)
     display.update()
-
