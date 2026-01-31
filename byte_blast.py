@@ -121,7 +121,7 @@ class Game:
             return
 
         # calculate score
-        self.score += int(total_lines_scored * 500 * (1.2**total_lines_scored))
+        self.score += int(total_lines_scored * 5 * (1.2**total_lines_scored))
 
         # clear the scored rows
         for y, full in enumerate(row_scored):
@@ -143,6 +143,8 @@ class Game:
 
 game = Game()
 display.setFPS(60)
+display.setFont("/lib/font3x5.bin", 3, 5, 1)
+
 while 1:
     # clear screen
     display.fill(0)
@@ -150,6 +152,13 @@ while 1:
     # draw game
     game.draw_board()
     game.draw_piece()
+
+    # divider line (board takes up 40*40)
+    display.drawLine(40, 0, 40, 40, 1)
+
+    # Draw Scoreboard
+    display.drawText("Score", 44, 3, 1)
+    display.drawText(f"{game.score}", 44, 10, 1)
 
     # handle input
     if buttonA.justPressed():
@@ -170,6 +179,4 @@ while 1:
     if buttonR.justPressed():
         game.move_piece(1, 0)
 
-    # thumby.display.drawText("HELLO WORLD", 15, 15)
     display.update()
-
