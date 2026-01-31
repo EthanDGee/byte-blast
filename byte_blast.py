@@ -7,8 +7,6 @@ import time
 # BITMAP: width: 5, height: 5
 PLACED_BIT_MAP = bytearray([19, 6, 12, 25, 19])
 
-# BITMAP: width: 5, height: 5
-PIECE_BIT_MAP = bytearray([31, 17, 17, 17, 31])
 
 SHAPE_KEYS = ("I", "O", "T", "S", "Z", "J", "L")
 TETROMINOES = {
@@ -30,10 +28,10 @@ class Game:
 
         self.GRID_START = (0, 0)
         self.brick_sprite = Sprite(5, 5, PLACED_BIT_MAP)
-        self.piece_sprite = Sprite(5, 5, PIECE_BIT_MAP)
 
         self.piece = self.get_random_piece()
         self.position = (3, 3)
+        self.queue = [self.get_random_piece() for _ in range(3)]
 
     def draw_board(self):
         for row in range(8):
@@ -44,12 +42,20 @@ class Game:
                     self.brick_sprite.y = row * 5
                     display.drawSprite(self.brick_sprite)
 
-    def draw_piece(self):
+    def draw_current_piece(self):
         for dx, dy in self.piece:
             # Calculate actual screen position
-            self.piece_sprite.x = (self.position[0] + dx) * 5
-            self.piece_sprite.y = (self.position[1] + dy) * 5
-            display.drawSprite(self.piece_sprite)
+            x = (self.position[0] + dx) * 5
+            y = (self.position[1] + dy) * 5
+            display.drawRectangle(x, y, 5, 5, 1)
+
+    @staticmethod
+    def draw_queue_piece(piece, position):
+        for dx, dy in piece:
+            # Calculate actual screen position
+            x = position[0] + (dx * 3)
+            y = position[1] + (dy * 3)
+            display.drawRectangle(x, y, 3, 3, 1)
 
     def rotate_piece(self, clock_wise):
         if clock_wise:
@@ -100,7 +106,10 @@ class Game:
 
         self.score_board()
 
-        self.piece = self.get_random_piece()
+        # move to next piece in queue
+        self.piece = self.queue.pop(0)
+        self.queue.append(self.get_random_piece())
+
         self.check_game_over()
         self.position = (3, 3)
 
@@ -186,7 +195,7 @@ while not game.game_over:
 
     # draw game
     game.draw_board()
-    game.draw_piece()
+    game.draw_current_piece()
 
     # divider line (board takes up 40*40)
     display.drawLine(40, 0, 40, 40, 1)
@@ -194,6 +203,10 @@ while not game.game_over:
     # Draw Scoreboard
     display.drawText("Score", 44, 3, 1)
     display.drawText(f"{game.score}", 44, 10, 1)
+
+    # Draw queue pieces with diagonal spacing
+    for i, piece in enumerate(game.queue):
+        game.draw_queue_piece(piece, (44 + i * 7, 17 + i * 7))
 
     # handle input
     if buttonA.justPressed():
@@ -217,3 +230,4 @@ while not game.game_over:
     display.update()
 
 # TODO: build a game over screen
+
