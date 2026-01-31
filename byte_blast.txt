@@ -1,0 +1,14 @@
+Byte Blast
+
+A compact Tetris-style puzzle game for Thumby. Place tetrominoes on an 8x8 grid to clear rows and columns for points. The more lines you clear the higher your score! Keep going until you can't place anymore blocks
+
+Author: @EthanDGee
+
+Version: 0.1.0
+
+Instructions:
+- D-pad: Move piece left/right/up/down
+- Button A: Place piece
+- Button B: Rotate piece
+- Fill complete rows or columns to clear them and score points
+- Game ends when no valid moves remain
