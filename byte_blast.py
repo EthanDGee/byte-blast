@@ -26,8 +26,7 @@ class Game:
     def __init__(self):
         self.board = [[False for _ in range(8)] for _ in range(8)]
         self.score = 0
-        self.board[1][3] = True
-        self.board[0][3] = True
+        self.game_over = False
 
         self.GRID_START = (0, 0)
         self.brick_sprite = Sprite(5, 5, PLACED_BIT_MAP)
@@ -100,7 +99,9 @@ class Game:
             self.board[y][x] = True
 
         self.score_board()
+
         self.piece = self.get_random_piece()
+        self.check_game_over()
         self.position = (3, 3)
 
     def score_board(self):
@@ -135,6 +136,40 @@ class Game:
                 for y in range(8):
                     self.board[x][y] = False
 
+    def check_game_over(self):
+        # loop over game board with piece in all 4 directions until a viable place spot is found
+
+        starting_piece = self.piece
+        starting_position = self.position
+
+        has_valid_move = False
+
+        for i in range(4):
+            for x in range(8):
+                for y in range(8):
+                    if not self.is_in_bounds(x, y, self.piece):
+                        continue
+
+                    self.position = (x, y)
+                    if self.piece_can_be_placed():
+                        has_valid_move = True
+                        break
+
+                if has_valid_move:
+                    break
+
+            if has_valid_move:
+                break
+
+            # rotate piece
+            self.piece = [(-dy, dx) for dx, dy in self.piece]
+
+        # reset to earlier version
+        self.piece = starting_piece
+        self.position = starting_position
+
+        self.game_over = not has_valid_move
+
     @staticmethod
     def get_random_piece():
         key = random.choice(SHAPE_KEYS)
@@ -145,7 +180,7 @@ game = Game()
 display.setFPS(60)
 display.setFont("/lib/font3x5.bin", 3, 5, 1)
 
-while 1:
+while not game.game_over:
     # clear screen
     display.fill(0)
 
@@ -180,3 +215,5 @@ while 1:
         game.move_piece(1, 0)
 
     display.update()
+
+# TODO: build a game over screen
