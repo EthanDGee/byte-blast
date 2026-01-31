@@ -1,0 +1,17 @@
+[project]
+name = "byte-blast"
+version = "0.1.0"
+description = "A simple tetris-style game for the thumby micro console"
+authors = [
+    {name = "EthanDGee",email = "workethangee@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "thumby (>=0.4.1,<0.5.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
