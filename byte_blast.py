@@ -1,6 +1,6 @@
 from thumby import Sprite
 from thumby import display
-from thumby import buttonA, buttonB
+from thumby import buttonA, buttonB, buttonU, buttonD, buttonL, buttonR
 import random
 
 
@@ -58,11 +58,18 @@ class Game:
         else:
             new_shape = [(dy, -dx) for dx, dy in self.piece]
 
-        if self.is_out_of_bounds(self.position[0], self.position[1], new_shape):
+        if self.is_in_bounds(self.position[0], self.position[1], new_shape):
             self.piece = new_shape
 
-    def is_out_of_bounds(self, col, row, shape):
-        # Check if the move results tin the piece being out of bound
+    def move_piece(self, x_change, y_change):
+        new_x = self.position[0] + x_change
+        new_y = self.position[1] + y_change
+
+        if self.is_in_bounds(new_x, new_y, self.piece):
+            self.position = (new_x, new_y)
+
+    def is_in_bounds(self, col, row, shape):
+        # Check if the move results in the piece being out of bound
         for dx, dy in shape:
             new_col = col + dx
             new_row = row + dy
@@ -94,5 +101,14 @@ while 1:
     if buttonB.justPressed():
         game.rotate_piece(clock_wise=False)
 
-    # thumby.display.drawText("HELLO WORLD", 15, 15)
+    if buttonU.justPressed():
+        game.move_piece(0, -1)
+    if buttonD.justPressed():
+        game.move_piece(0, 1)
+    if buttonL.justPressed():
+        game.move_piece(-1, 0)
+    if buttonR.justPressed():
+        game.move_piece(1, 0)
+
     display.update()
+
