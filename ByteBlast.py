@@ -1,6 +1,7 @@
 from thumby import Sprite
 from thumby import display
 from thumby import buttonA, buttonB, buttonU, buttonD, buttonL, buttonR
+from thumby import audio
 import random
 import time
 import math
@@ -40,7 +41,16 @@ TETROMINOES = {
 
 # Split pools to allow for piece rarity
 POOL_3 = ["I2", "I3", "L3"]
-POOL_4 = ["I", "O", "T", "S", "Z", "J", "L",  "N",]
+POOL_4 = [
+    "I",
+    "O",
+    "T",
+    "S",
+    "Z",
+    "J",
+    "L",
+    "N",
+]
 POOL_5 = ["F", "P", "W", "Y", "Z5", "L5", "U"]
 
 
@@ -155,13 +165,17 @@ class Game:
         self.check_game_over()
         self.position = (3, 3)
 
+        # if game over pause so players can see there final board
+        if self.game_over:
+            self.dun_dun_dunnnn()
+
     def score_board(self):
         row_scored = [True for _ in range(8)]
         col_scored = [True for _ in range(8)]
 
         for x in range(8):
             for y in range(8):
-                # if they are true the entire row/col they are a full line
+                # if they are true the entire row/col they are a full linessddw
                 col_scored[x] = col_scored[x] and self.board[x][y]
                 row_scored[y] = row_scored[y] and self.board[x][y]
 
@@ -176,20 +190,28 @@ class Game:
         line_score = total_lines_scored * 5 * (1.2**total_lines_scored)
         # give them a reward for longer sessions (doesn't activate until 10 moves)
         turn_multiplier = max(math.log(self.turn_count) - 1, 1)
-        print(f"{line_score}*{turn_multiplier} ({self.turn_count})")
         self.score += int(line_score * turn_multiplier)
 
-        # clear the scored rows
+        # clear the scored lines and make a sound for every line cleared
+        # the sounds start at a middle c (261 and go up one note every clear
+
+        lines_cleared = 0
         for y, full in enumerate(row_scored):
             if full:
+                audio.playBlocking(int(440 * 1.06 ** (2 * lines_cleared)), 250)
                 for x in range(8):
                     self.board[x][y] = False
+
+                lines_cleared += 1
 
         # clear the scored columns
         for x, full in enumerate(col_scored):
             if full:
+                audio.playBlocking(int(440 * 1.06 ** (2 * lines_cleared)), 250)
                 for y in range(8):
                     self.board[x][y] = False
+
+                lines_cleared += 1
 
     def check_game_over(self):
         # loop over game board with piece in all 4 directions until a viable place spot is found
@@ -229,16 +251,23 @@ class Game:
     def get_random_piece():
         rand = random.random()
         # pick a random from the pools
-        if rand < 10.7:  # common (classic piece)
+        if rand < 0.7:  # common (classic piece)
             key = random.choice(POOL_4)
         elif rand < 0.88:  # uncommon (small pieces)
             key = random.choice(POOL_3)
         else:  # rare (large pieces)
             key = random.choice(POOL_5)
-        
-        print(f"key:{key}")
 
         return TETROMINOES[key]
+
+    @staticmethod
+    def dun_dun_dunnnn():
+        # plays the classic dun_dun_dunnnn sound effect
+        audio.playBlocking(553, 150)
+        time.sleep(0.05)
+        audio.playBlocking(415, 150)
+        time.sleep(0.05)
+        audio.playBlocking(349, 1000)
 
 
 game = Game()
@@ -266,9 +295,6 @@ while True:
         # Draw queue pieces with diagonal spacing
         for i, piece in enumerate(game.queue):
             game.draw_queue_piece(piece, (45 + i * 8, 20 + i * 7))
-            # if game over pause so players can see there final board
-            if game.game_over:
-                time.sleep(1)
 
         # handle input
         if buttonA.justPressed():
