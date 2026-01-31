@@ -4,9 +4,9 @@ from thumby import buttonA, buttonB, buttonU, buttonD, buttonL, buttonR
 import random
 import time
 
-# BITMAP: width: 5, height: 5
-PLACED_BIT_MAP = bytearray([19, 6, 12, 25, 19])
-
+# Placed BITMAP checkerboard pattern: width: 5, height: 5
+PLACED_BIT_MAP_A = bytearray([10, 21, 10, 21, 10])
+PLACED_BIT_MAP_B = bytearray([21, 10, 21, 10, 21])
 
 SHAPE_KEYS = ("I", "O", "T", "S", "Z", "J", "L")
 TETROMINOES = {
@@ -27,8 +27,8 @@ class Game:
         self.game_over = False
 
         self.GRID_START = (0, 0)
-        self.brick_sprite = Sprite(5, 5, PLACED_BIT_MAP)
-
+        # 2 patterns 1 for each of the alternating patterns
+        self.brick_sprite = Sprite(5, 5, PLACED_BIT_MAP_A + PLACED_BIT_MAP_B)
         self.piece = self.get_random_piece()
         self.position = (3, 3)
         self.queue = [self.get_random_piece() for _ in range(3)]
@@ -37,6 +37,12 @@ class Game:
         for row in range(8):
             for col in range(8):
                 if self.board[row][col]:
+                    # alternate between the block patterns to create checkerboard
+                    if (row + col) % 2 == 0:
+                        self.brick_sprite.setFrame(0)
+                    else:
+                        self.brick_sprite.setFrame(1)
+
                     # Col is X, Row is Y
                     self.brick_sprite.x = col * 5
                     self.brick_sprite.y = row * 5
@@ -230,4 +236,3 @@ while not game.game_over:
     display.update()
 
 # TODO: build a game over screen
-
