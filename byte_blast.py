@@ -8,6 +8,13 @@ import time
 PLACED_BIT_MAP_A = bytearray([10, 21, 10, 21, 10])
 PLACED_BIT_MAP_B = bytearray([21, 10, 21, 10, 21])
 
+# Game Over BITMAP: width: 40, height: 40
+GAME_OVER_BITMAP = bytearray([255,225,253,253,253,255,63,191,191,191,191,63,255,255,63,191,191,191,63,255,255,63,63,255,63,63,255,255,63,191,191,191,191,255,255,253,253,253,225,255,
+           255,255,255,255,255,255,0,127,119,119,119,6,255,255,0,247,247,247,0,255,255,0,254,248,254,0,255,255,0,123,123,123,127,255,255,255,255,255,255,255,
+           255,255,255,255,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,255,255,255,255,255,
+           255,255,255,255,255,255,0,254,254,254,254,0,255,255,224,143,63,143,224,255,255,0,238,238,238,254,255,255,0,222,158,45,243,255,255,255,255,255,255,255,
+           255,135,191,191,191,255,254,254,254,254,254,254,255,255,255,255,254,255,255,255,255,254,254,254,254,254,255,255,254,255,255,255,254,255,255,191,191,191,135,255])
+
 SHAPE_KEYS = (
     "I",
     "O",
@@ -28,6 +35,7 @@ SHAPE_KEYS = (
     "Y",
     "Z5",
 )
+
 TETROMINOES = {
     "I": [(0, 1), (1, 1), (2, 1), (3, 1)],
     "O": [(1, 0), (2, 0), (1, 1), (2, 1)],
@@ -59,6 +67,14 @@ class Game:
         self.GRID_START = (0, 0)
         # 2 patterns 1 for each of the alternating patterns
         self.brick_sprite = Sprite(5, 5, PLACED_BIT_MAP_A + PLACED_BIT_MAP_B)
+        self.piece = self.get_random_piece()
+        self.position = (3, 3)
+        self.queue = [self.get_random_piece() for _ in range(3)]
+
+    def reset(self):
+        self.board = [[False for _ in range(8)] for _ in range(8)]
+        self.score = 0
+        self.game_over = False
         self.piece = self.get_random_piece()
         self.position = (3, 3)
         self.queue = [self.get_random_piece() for _ in range(3)]
@@ -225,13 +241,11 @@ game = Game()
 display.setFPS(60)
 display.setFont("/lib/font3x5.bin", 3, 5, 1)
 
-while not game.game_over:
+game_over_screen = Sprite(40, 40, GAME_OVER_BITMAP, 0, 0)
+
+while True:
     # clear screen
     display.fill(0)
-
-    # draw game
-    game.draw_board()
-    game.draw_current_piece()
 
     # divider line (board takes up 40*40)
     display.drawLine(40, 0, 40, 40, 1)
@@ -240,29 +254,50 @@ while not game.game_over:
     display.drawText("Score", 44, 3, 1)
     display.drawText(f"{game.score}", 44, 10, 1)
 
-    # Draw queue pieces with diagonal spacing
-    for i, piece in enumerate(game.queue):
-        game.draw_queue_piece(piece, (44 + i * 7, 17 + i * 7))
+    if not game.game_over:
+        # draw game
+        game.draw_board()
+        game.draw_current_piece()
 
-    # handle input
-    if buttonA.justPressed():
-        game.place_piece()
+        # Draw queue pieces with diagonal spacing
+        for i, piece in enumerate(game.queue):
+            game.draw_queue_piece(piece, (44 + i * 7, 17 + i * 7))
+            # if game over pause so players can see there final board
+            if game.game_over:
+                time.sleep(1)
 
-    if buttonB.justPressed():
-        game.rotate_piece(clock_wise=False)
+        # handle input
+        if buttonA.justPressed():
+            game.place_piece()
 
-    if buttonU.justPressed():
-        game.move_piece(0, -1)
+        if buttonB.justPressed():
+            game.rotate_piece(clock_wise=False)
 
-    if buttonD.justPressed():
-        game.move_piece(0, 1)
+        if buttonU.justPressed():
+            game.move_piece(0, -1)
 
-    if buttonL.justPressed():
-        game.move_piece(-1, 0)
+        if buttonD.justPressed():
+            game.move_piece(0, 1)
 
-    if buttonR.justPressed():
-        game.move_piece(1, 0)
+        if buttonL.justPressed():
+            game.move_piece(-1, 0)
+
+        if buttonR.justPressed():
+            game.move_piece(1, 0)
+
+    # show game over screen
+    else:
+        display.drawSprite(game_over_screen)
+
+        # in place of queue section
+        display.drawText("New", 44, 18, 1)
+        display.drawText("Game: A", 44, 25, 1)
+        display.drawText("Exit: B", 44, 32, 1)
+
+        if buttonA.justPressed():
+            game.reset()
+
+        if buttonB.justPressed():
+            break
 
     display.update()
-
-# TODO: build a game over screen
