@@ -3,6 +3,7 @@ from thumby import display
 from thumby import buttonA, buttonB, buttonU, buttonD, buttonL, buttonR
 import random
 import time
+import math
 
 # Placed BITMAP checkerboard pattern: width: 5, height: 5
 PLACED_BIT_MAP_A = bytearray([10, 21, 10, 21, 10])
@@ -17,7 +18,7 @@ GAME_OVER_BITMAP = bytearray([255,225,253,253,253,255,63,191,191,191,191,63,255,
 
 
 TETROMINOES = {
-    "i": [(0,0), (0,1)],
+    "i": [(0, 0), (0, 1)],
     "I3": [(0, 0), (1, 0), (2, 0)],
     "L3": [(0, 0), (0, 1), (1, 0)],
     "V3": [(0, 0), (1, 0), (0, 1)],
@@ -48,6 +49,7 @@ class Game:
     def __init__(self):
         self.board = [[False for _ in range(8)] for _ in range(8)]
         self.score = 0
+        self.turn_count = 0
         self.game_over = False
 
         self.GRID_START = (0, 0)
@@ -60,6 +62,7 @@ class Game:
     def reset(self):
         self.board = [[False for _ in range(8)] for _ in range(8)]
         self.score = 0
+        self.turn_count = 0
         self.game_over = False
         self.piece = self.get_random_piece()
         self.position = (3, 3)
@@ -136,6 +139,8 @@ class Game:
         if not self.piece_can_be_placed():
             return
 
+        self.turn_count += 1
+
         for dx, dy in self.piece:
             x = self.position[0] + dx
             y = self.position[1] + dy
@@ -169,7 +174,11 @@ class Game:
             return
 
         # calculate score
-        self.score += int(total_lines_scored * 5 * (1.2**total_lines_scored))
+        line_score = total_lines_scored * 5 * (1.2**total_lines_scored)
+        # give them a reward for longer sessions (doesn't activate until 10 moves)
+        turn_multiplier = max(math.log(self.turn_count) - 1, 1)
+        print(f"{line_score}*{turn_multiplier} ({self.turn_count})")
+        self.score += int(line_score * turn_multiplier)
 
         # clear the scored rows
         for y, full in enumerate(row_scored):
@@ -221,11 +230,11 @@ class Game:
     def get_random_piece():
         rand = random.random()
         # pick a random from the pools
-        if rand < 0.7: # common (classic piece)
+        if rand < 0.7:  # common (classic piece)
             key = random.choice(POOL_4)
-        elif rand < 0.88: # uncommon (small pieces)
+        elif rand < 0.88:  # uncommon (small pieces)
             key = random.choice(POOL_3)
-        else: # rare (large peices)
+        else:  # rare (large peices)
             key = random.choice(POOL_5)
         return TETROMINOES[key]
 
