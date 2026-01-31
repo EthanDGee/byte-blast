@@ -3,7 +3,6 @@ from thumby import display
 from thumby import buttonA, buttonB, buttonU, buttonD, buttonL, buttonR
 import random
 
-
 # BITMAP: width: 5, height: 5
 PLACED_BIT_MAP = bytearray([19, 6, 12, 25, 19])
 
@@ -79,6 +78,31 @@ class Game:
 
         return True
 
+    def piece_can_be_placed(self):
+        for dx, dy in self.piece:
+            x = self.position[0] + dx
+            y = self.position[1] + dy
+
+            if self.board[y][x]:
+                return False
+
+        return True
+
+    def place_piece(self):
+        if not self.piece_can_be_placed():
+            return
+
+        for dx, dy in self.piece:
+            x = self.position[0] + dx
+            y = self.position[1] + dy
+
+            print(f"{x},{y}")
+
+            self.board[y][x] = True
+
+        self.piece = self.get_random_piece()
+        self.position = (3, 3)
+
     @staticmethod
     def get_random_piece():
         key = random.choice(SHAPE_KEYS)
@@ -97,18 +121,21 @@ while 1:
 
     # handle input
     if buttonA.justPressed():
-        game.rotate_piece(clock_wise=True)
+        game.place_piece()
     if buttonB.justPressed():
         game.rotate_piece(clock_wise=False)
 
     if buttonU.justPressed():
         game.move_piece(0, -1)
+
     if buttonD.justPressed():
         game.move_piece(0, 1)
+
     if buttonL.justPressed():
         game.move_piece(-1, 0)
+
     if buttonR.justPressed():
         game.move_piece(1, 0)
 
+    # thumby.display.drawText("HELLO WORLD", 15, 15)
     display.update()
-
