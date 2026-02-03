@@ -4,7 +4,7 @@ A compact Tetris-style puzzle game for Thumby. Place tetrominoes on an 8x8 grid 
 
 Author: @EthanDGee
 
-Version: 0.1.0
+Version: 1.0.0
 
 Instructions:
 - D-pad: Move piece left/right/up/down
