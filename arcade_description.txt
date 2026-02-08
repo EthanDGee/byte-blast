@@ -4,7 +4,7 @@ A compact Tetris-style puzzle game for Thumby. Place tetrominoes on an 8x8 grid 
 
 Author: @EthanDGee
 Repo: https://github.com/EthanDGee/byte-blast
-Version: 1.0.0
+Version: 1.1.0
 
 Instructions:
 - D-pad: Move piece left/right/up/down

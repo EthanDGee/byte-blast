@@ -38,7 +38,7 @@ TITLE_BOTTOM_LINE_X2 = 72
 PLACED_BIT_MAP_A = bytearray([10, 21, 10, 21, 10])
 PLACED_BIT_MAP_B = bytearray([21, 10, 21, 10, 21])
 
-
+# ruff: noqa
 # Title Screen  BITMAP: width: 70, height: 30
 TITLE_BIT_MAP = bytearray([255,255,255,255,255,1,1,57,57,57,57,57,57,135,135,255,255,225,225,159,159,127,127,159,159,225,225,255,255,249,249,249,249,1,1,249,249,249,249,255,255,1,1,153,153,153,153,249,249,249,249,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
            255,255,255,255,255,192,192,207,207,207,207,207,207,240,240,255,255,255,255,255,255,192,192,255,255,255,255,255,255,255,255,255,255,192,192,255,255,255,255,255,255,192,192,207,207,207,207,207,207,207,207,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
@@ -51,7 +51,9 @@ GAME_OVER_BIT_MAP = bytearray([255,225,253,253,253,255,63,191,191,191,191,63,255
            255,255,255,255,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,239,255,255,255,255,255,
            255,255,255,255,255,255,0,254,254,254,254,0,255,255,224,143,63,143,224,255,255,0,238,238,238,254,255,255,0,222,158,45,243,255,255,255,255,255,255,255,
            255,135,191,191,191,255,254,254,254,254,254,254,255,255,255,255,254,255,255,255,255,254,254,254,254,254,255,255,254,255,255,255,254,255,255,191,191,191,135,255])
+# ruff: enable
 
+# ruff: noqa
 TETROMINOES = {
     "I2": [(0, 0), (0, 1)],
     "I3": [(-1, 0), (0, 0), (1, 0)],
@@ -68,26 +70,20 @@ TETROMINOES = {
     "P": [(-1, -1), (0, -1), (1, -1), (-1, 0), (0, 0)],
     "W": [(-1, 1), (-1, 0), (0, 0), (0, -1), (1, -1)],
     "Y": [(0, -1), (-1, 0), (0, 0), (1, 0), (0, 1)],
-    "Z5": [(-1, -1), (0, -1), (0, 0), (0, 1), (1, 1)],
+    "S5": [(-1, -1), (0, -1), (0, 0), (0, 1), (1, 1)],
+    "Z5": [(-1, 1), (0, -1), (0, 0), (0, 1), (-1, 1)],
     "L5": [(-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)],
     "U": [(-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0)],
 }
+# ruff: enable
 
 
 # Split pools to allow for piece rarity
+# ruff: noqa
 POOL_3 = ["I2", "I3", "L3"]
-POOL_4 = [
-    "I",
-    "O",
-    "T",
-    "S",
-    "Z",
-    "J",
-    "L",
-    "N",
-]
+POOL_4 = ["I", "O", "T", "S", "Z", "J", "L", "N"]
 POOL_5 = ["F", "P", "W", "Y", "Z5", "L5", "U"]
-
+# ruff: enable
 
 class Game:
     BLOCK_SIZE_PX = 5
@@ -102,14 +98,15 @@ class Game:
 
     # Scoring
     BASE_LINE_SCORE = 5
-    LINE_SCORE_EXP_MULTIPLIER = 1.2
-    TURN_SCORE_MULTIPLIER_OFFSET = 1
-    MIN_TURN_SCORE_MULTIPLIER = 1
-    
+    # This gives a 4 line clear a 10x bonus
+    LINE_SCORE_EXP_MULTIPLIER = 2.16
+        
     def __init__(self):
         self.board = [[False for _ in range(Game.BOARD_DIMENSION)] for _ in range(Game.BOARD_DIMENSION)]
         self.score = 0
         self.turn_count = 0
+        self.scored_last_turn = False
+        self.combo_streak = 0 
         self.game_over = False
 
         # 2 patterns 1 for each of the alternating patterns
@@ -124,6 +121,8 @@ class Game:
         self.board = [[False for _ in range(Game.BOARD_DIMENSION)] for _ in range(Game.BOARD_DIMENSION)]
         self.score = 0
         self.turn_count = 0
+        self.scored_last_turn = False
+        self.combo_streak = 0 
         self.game_over = False
         self.piece = self.get_random_piece()
         self.position = Game.START_POSITION
@@ -224,10 +223,10 @@ class Game:
 
     def score_board(self):
         # Audio for line clear
-        BASE_CLEAR_FREQ = 440
-        CLEAR_FREQ_MULTIPLIER = 1.06
+        BASE_CLEAR_FREQ = 440 # middle c
+        CLEAR_FREQ_MULTIPLIER = 1.06 # gap to next half step
         CLEAR_FREQ_SEMITONE_STEP = 2
-        CLEAR_SOUND_DURATION = 250
+        CLEAR_SOUND_DURATION_MS = 250
 
         row_scored = [True for _ in range(Game.BOARD_DIMENSION)]
         col_scored = [True for _ in range(Game.BOARD_DIMENSION)]
@@ -243,13 +242,20 @@ class Game:
 
         # exit early if no lines scored
         if total_lines_scored == 0:
+            self.scored_last_turn = False
+            self.combo_streak = 0
             return
 
-        # calculate score
-        line_score = total_lines_scored * Game.BASE_LINE_SCORE * (Game.LINE_SCORE_EXP_MULTIPLIER**total_lines_scored)
+        self.combo_streak += 1
+        self.scored_last_turn = True
+
+        # calculate score with reward for multi line clear 
+        multi_line_bonus  = (Game.LINE_SCORE_EXP_MULTIPLIER**(total_lines_scored - 1))
+        
         # give them a reward for longer sessions (doesn't activate until 10 moves)
-        turn_multiplier = max(math.log(self.turn_count) - Game.TURN_SCORE_MULTIPLIER_OFFSET, Game.MIN_TURN_SCORE_MULTIPLIER)
-        self.score += int(line_score * turn_multiplier)
+        turn_multiplier = max(math.log(self.turn_count - 10, 5), 1)
+        
+        self.score += int(Game.BASE_LINE_SCORE * multi_line_bonus * turn_multiplier * self.combo_streak)
 
         # clear the scored lines and make a sound for every line cleared
         # the sounds start at a middle c (261 and go up one note every clear
@@ -257,7 +263,7 @@ class Game:
         lines_cleared = 0
         for y, full in enumerate(row_scored):
             if full:
-                audio.playBlocking(int(BASE_CLEAR_FREQ * CLEAR_FREQ_MULTIPLIER ** (CLEAR_FREQ_SEMITONE_STEP * lines_cleared)), CLEAR_SOUND_DURATION)
+                audio.playBlocking(int(BASE_CLEAR_FREQ * CLEAR_FREQ_MULTIPLIER ** (CLEAR_FREQ_SEMITONE_STEP * lines_cleared)), CLEAR_SOUND_DURATION_MS)
                 for x in range(Game.BOARD_DIMENSION):
                     self.board[x][y] = False
 
@@ -266,7 +272,7 @@ class Game:
         # clear the scored columns
         for x, full in enumerate(col_scored):
             if full:
-                audio.playBlocking(int(BASE_CLEAR_FREQ * CLEAR_FREQ_MULTIPLIER ** (CLEAR_FREQ_SEMITONE_STEP * lines_cleared)), CLEAR_SOUND_DURATION)
+                audio.playBlocking(int(BASE_CLEAR_FREQ * CLEAR_FREQ_MULTIPLIER ** (CLEAR_FREQ_SEMITONE_STEP * lines_cleared)), CLEAR_SOUND_DURATION_MS)
                 for y in range(Game.BOARD_DIMENSION):
                     self.board[x][y] = False
 
